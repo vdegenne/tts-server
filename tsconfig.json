@@ -12,6 +12,8 @@
 		"declaration": true,
 		"declarationMap": true,
 		"sourceMap": true,
-		"allowImportingTsExtensions": true
-	}
+		"allowImportingTsExtensions": true,
+		"rewriteRelativeImportExtensions": true
+	},
+	"include": ["./src/**/*"]
 }

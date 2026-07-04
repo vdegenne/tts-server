@@ -14,7 +14,7 @@ config<TTSApi>({
 	},
 
 	post: {
-		tts({guard, body}) {
+		tts({guard, ctx}) {
 			const cacheLocation = './cache'
 			let {text, model, voice, languageCode} = guard({
 				allowAlien: true,
@@ -22,12 +22,21 @@ config<TTSApi>({
 			})
 			if (!languageCode) {
 				if (hasSomeJapanese(text)) {
-					languageCode = 'ja-JP'
+					// languageCode = 'ja-JP'
 				}
 			}
-			const hash = buildTTSHash({})
+			console.log(text, languageCode)
+			if (!languageCode) {
+				ctx.throw(
+					400,
+					"A language code was not provided and couldn't be guessed.",
+				)
+			}
+			// const hash = buildTTSHash({
+			// 	text,
+			// })
 
-			ttsClient.synthesizeSpeech({voice: {languageCode: ''}})
+			// ttsClient.synthesizeSpeech({voice: {languageCode: ''}})
 		},
 	},
 })
