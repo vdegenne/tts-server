@@ -1,8 +1,14 @@
 import {config} from '@vdegenne/koa'
-import {type TTSApi} from './api.js'
-import {buildTTSHash} from './utils.js'
 import {hasSomeJapanese} from 'asian-regexps'
-import {ttsClient} from './tts-client.js'
+import fs from 'fs'
+import * as pathlib from 'path'
+import {type TTSApi} from './api.js'
+import {ttsClient} from './tts-client.ts'
+import {audioEncodingToExtension} from './types.ts'
+import {buildTTSHash, isGeminiModel, voiceIncludesModel} from './utils.js'
+import {type Voice, VOICE_ALIASES, type VoiceAlias, VOICES} from './voice.ts'
+
+const cacheLocation = './cache'
 
 config<TTSApi>({
 	port: 37435,
@@ -14,29 +20,121 @@ config<TTSApi>({
 	},
 
 	post: {
-		tts({guard, ctx}) {
-			const cacheLocation = './cache'
-			let {text, model, voice, languageCode} = guard({
+		async tts({guard, ctx}) {
+			let {
+				text,
+				languageCode,
+				model,
+				voice,
+				prompt,
+				audioEncoding,
+				pitch,
+				rate,
+			} = guard({
 				allowAlien: true,
 				required: ['text'],
 			})
+
 			if (!languageCode) {
 				if (hasSomeJapanese(text)) {
-					// languageCode = 'ja-JP'
+					languageCode = 'ja-JP'
 				}
 			}
-			console.log(text, languageCode)
 			if (!languageCode) {
-				ctx.throw(
+				return ctx.throw(
 					400,
-					"A language code was not provided and couldn't be guessed.",
+					'A language code was not provided and could not be inferred.',
 				)
 			}
-			// const hash = buildTTSHash({
-			// 	text,
-			// })
 
-			// ttsClient.synthesizeSpeech({voice: {languageCode: ''}})
+			// model ??= 'gemini-3.1-flash-tts-preview'
+			// model ??= 'gemini-2.5-pro-tts'
+			// model ??= 'Chirp-HD'
+			model ??= 'Chirp3-HD'
+			// model ??= 'Wavenet'
+			voice ??= 'Alnilam'
+			audioEncoding ??= 'MP3' // default to mp3
+			pitch ??= 0
+			rate ??= 1
+			if (!isGeminiModel(model)) {
+				prompt = undefined
+			}
+
+			/**
+			 * TODO: resolve "random" voice before hashing ?
+			 */
+			// ?
+
+			const hash = buildTTSHash({
+				text,
+				languageCode,
+				model,
+				voice,
+				prompt,
+				audioEncoding,
+				pitch,
+				rate,
+			})
+
+			if (voice === 'random') {
+				voice = VOICE_ALIASES[
+					Math.floor(Math.random() * VOICE_ALIASES.length)
+				] as VoiceAlias
+				console.log(`picking random voice: ${voice}`)
+			}
+
+			if (!isGeminiModel(model) && !voiceIncludesModel(voice)) {
+				const composedVoice = `${languageCode}-${model}-${voice}`
+				// console.log('composed: ', composedVoice)
+				if (!VOICES.includes(composedVoice as Voice)) {
+					ctx.throw(`The inferred voice is not available (${composedVoice})`)
+				} else {
+					voice = composedVoice as Voice
+				}
+				model = undefined
+			}
+
+			const extension = audioEncodingToExtension[audioEncoding]
+			if (!extension) {
+				ctx.throw("Extension couldn't be determined")
+			}
+
+			// prettier-ignore
+			console.log({text, languageCode, model, voice, prompt, audioEncoding, pitch, rate, extension})
+
+			const [response] = await ttsClient.synthesizeSpeech({
+				audioConfig: {
+					audioEncoding,
+					pitch,
+					speakingRate: rate,
+				},
+				input: {text},
+				voice: {
+					languageCode,
+					name: voice,
+					modelName: model,
+				},
+			})
+
+			// send to client immediately
+			ctx.type = 'audio/mpeg'
+			ctx.body = response.audioContent
+
+			// async cache write (non-blocking)
+			void (async function save() {
+				try {
+					if (!response.audioContent) {
+						throw new Error('No audioContent returned from TTS API')
+					}
+
+					await fs.promises.writeFile(
+						pathlib.join(cacheLocation, `${hash}.${extension}`),
+						response.audioContent,
+					)
+				} catch (e) {
+					console.error('cache write failed', e)
+				}
+			})()
 		},
 	},
 })

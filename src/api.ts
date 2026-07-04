@@ -1,5 +1,6 @@
+import {type google} from '@google-cloud/text-to-speech/build/protos/protos.js'
 import {Rest, type Endpoint} from '@vdegenne/mini-rest'
-import {GeminiTTSModel} from './types.js'
+import {AudioEncoding, TTSModel} from './types.js'
 import {LanguageCode, Voice} from './voice.ts'
 
 export interface TTSArgs {
@@ -19,12 +20,32 @@ export interface TTSArgs {
 	 * The model to be used
 	 * TODO: Default to determine
 	 */
-	model?: GeminiTTSModel
+	model?: TTSModel
 	/**
 	 * The voice to be used.
 	 * TODO: Default to determine
 	 */
 	voice?: Voice | 'random'
+
+	/**
+	 * Prompt to be used with the model (only with Gemini models)
+	 */
+	prompt?: string
+
+	/**
+	 * @default MP3
+	 */
+	audioEncoding?: Exclude<AudioEncoding, 'AUDIO_ENCODING_UNSPECIFIED'>
+
+	/**
+	 * @default 0
+	 */
+	pitch: number
+
+	/**
+	 * @default 1
+	 */
+	rate: number
 }
 
 export interface TTSApi {

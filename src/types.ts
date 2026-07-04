@@ -1,30 +1,7 @@
-// export interface TTSRequest {
-// 	audioConfig: AudioConfig
-// 	input: TTSInput
-// 	voice: VoiceConfig
-// }
-//
-// export interface AudioConfig {
-// 	audioEncoding: 'LINEAR16' | 'PCM' | 'MP3' | 'M4A'
-// 	pitch: number
-// 	speakingRate: number
-// }
-//
-// export interface TTSInput {
-// 	prompt: string
-// 	text: string
-// }
-//
-// export interface VoiceConfig {
-// 	languageCode: string
-// 	modelName: string
-// 	name: string
-// }
-
 import {type google} from '@google-cloud/text-to-speech/build/protos/protos.js'
 
 /**
- * Better (pricier) to lower quality (cheaper):
+ * Better (pricier) to lower quality (cheaper), maybe :
  *
  *	- Instant Custom Voice (voix personnalisée)
  * 	- Studio
@@ -117,9 +94,10 @@ export const TTS_MODELS = {
 	POLYGLOT: 'Polyglot',
 } as const
 
-export type GeminiTTSModel = (typeof TTS_MODELS)[keyof typeof TTS_MODELS]
+export type TTSModel = (typeof TTS_MODELS)[keyof typeof TTS_MODELS]
 
-type AudioEncoding = keyof typeof google.cloud.texttospeech.v1.AudioEncoding
+export type AudioEncoding =
+	keyof typeof google.cloud.texttospeech.v1.AudioEncoding
 
 export const audioEncodingToExtension: Record<AudioEncoding, string> = {
 	AUDIO_ENCODING_UNSPECIFIED: '',
