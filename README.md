@@ -1,5 +1,9 @@
 ## Back
 
+Create a service account on Google Cloud first and download a config file (save it at the root of this project), rename it to `service-account.json`.
+
+Then,
+
 ```
 npm run start:server [--watch]
 ```
