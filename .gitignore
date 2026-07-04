@@ -12,3 +12,4 @@ public/*192x192.png
 public/*512x512.png
 admin-scripts/serviceAccountKey.json
 .mdicon2svg
+src/voice.ts
