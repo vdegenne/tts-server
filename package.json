@@ -1,6 +1,6 @@
 {
 	"name": "@vdegenne/tts-server",
-	"version": "0.1.7",
+	"version": "0.1.8",
 	"description": "",
 	"type": "module",
 	"exports": {
@@ -23,9 +23,14 @@
 	},
 	"devDependencies": {
 		"@vdegenne/koa": "^0.1.49",
-		"@vdegenne/mini-rest": "^0.3.5",
 		"typescript": "^6.0.3",
-		"wireit": "^0.14.13"
+		"wireit": "^0.14.13",
+		"@google-cloud/text-to-speech": "^6.4.1",
+		"asian-regexps": "^5.1.0",
+		"google-auth-library": "^10.5.0"
+	},
+	"dependencies": {
+		"@vdegenne/mini-rest": "^0.3.5"
 	},
 	"wireit": {
 		"build:voice-ts": {
@@ -59,10 +64,5 @@
 				"build"
 			]
 		}
-	},
-	"dependencies": {
-		"@google-cloud/text-to-speech": "^6.4.1",
-		"asian-regexps": "^5.1.0",
-		"google-auth-library": "^10.5.0"
 	}
 }
