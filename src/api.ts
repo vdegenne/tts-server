@@ -1,26 +1,23 @@
 import {Rest, type Endpoint} from '@vdegenne/mini-rest'
+import {GeminiTTSModel} from './types.js'
+import {VoiceName} from './voice.js'
 
-export const GEMINI_TTS_MODELS = {
-	GEMINI_3_1_FLASH_TTS: 'gemini-3.1-flash-tts-preview',
-	GEMINI_2_5_FLASH_TTS: 'gemini-2.5-flash-tts',
-	GEMINI_2_5_PRO_TTS: 'gemini-2.5-pro-tts',
-	GEMINI_2_5_FLASH_LITE_TTS: 'gemini-2.5-flash-lite-preview-tts',
-	CHIRP_3_HD_VOICES: 'chirp-3-hd-voices',
-} as const
+export interface TTSArgs {
+	text: string
+	languageCode: string
+	model?: GeminiTTSModel
+	voice?: VoiceName | 'random'
+}
 
-type GeminiTTSModel = (typeof GEMINI_TTS_MODELS)[keyof typeof GEMINI_TTS_MODELS]
-
-type TTSArgs = {text: string; model: GeminiTTSModel}
-
-export interface ttsApi {
+export interface TTSApi {
 	get: {ping: Endpoint<void, 'pong'>}
 	post: {tts: Endpoint<TTSArgs, void>}
 }
 
-let api: Rest<ttsApi> | undefined
-export function getApi(): Rest<ttsApi> {
+let api: Rest<TTSApi> | undefined
+export function getApi(): Rest<TTSApi> {
 	if (!api) {
-		api = new Rest<ttsApi>('http://localhost:37435/')
+		api = new Rest<TTSApi>('http://localhost:37435/')
 	}
 	return api
 }

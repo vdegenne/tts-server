@@ -1,13 +1,10 @@
 import {config} from '@vdegenne/koa'
-import {type ttsApi} from './api.js'
-import dotenv from './dotenv.js'
-import {getHash} from './utils.js'
+import {type TTSApi} from './api.js'
+import {buildTTSHash} from './utils.js'
+import {hasSomeJapanese} from 'asian-regexps'
+import {ttsClient} from './tts-client.js'
 
-dotenv.config()
-
-// console.log(process.env.GOOGLE_TTS_API_KEY)
-
-config<ttsApi>({
+config<TTSApi>({
 	port: 37435,
 
 	useCors: true,
@@ -17,9 +14,20 @@ config<ttsApi>({
 	},
 
 	post: {
-		tts({guard}) {
-			const {text} = guard({required: ['text']})
-			// const hash = getHash(text)
+		tts({guard, body}) {
+			const cacheLocation = './cache'
+			let {text, model, voice, languageCode} = guard({
+				allowAlien: true,
+				required: ['text'],
+			})
+			if (!languageCode) {
+				if (hasSomeJapanese(text)) {
+					languageCode = 'ja-JP'
+				}
+			}
+			const hash = buildTTSHash({})
+
+			ttsClient.synthesizeSpeech({voice: {languageCode: ''}})
 		},
 	},
 })

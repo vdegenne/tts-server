@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 
-export function getHash(input: string | object): string {
+function getHash(input: string | object): string {
 	const normalized = typeof input === 'string' ? input : JSON.stringify(input)
 
 	return crypto.createHash('sha256').update(normalized).digest('hex')

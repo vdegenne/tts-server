@@ -1,21 +1,9 @@
 import fs from 'fs'
-import dotenv from '../src/dotenv.ts'
-
-dotenv.config()
-
-const API_KEY = process.env.GOOGLE_TTS_API_KEY
+import {ttsClient} from '../src/tts-client.ts'
 
 async function fetchVoices() {
-	const res = await fetch(
-		`https://texttospeech.googleapis.com/v1/voices?key=${API_KEY}`,
-	)
-
-	if (!res.ok) {
-		throw new Error(`API error: ${res.status} ${await res.text()}`)
-	}
-
-	const data = await res.json()
-	return data.voices
+	const data = await ttsClient.listVoices()
+	return data[0].voices
 }
 
 function isAliasName(name) {

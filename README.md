@@ -21,3 +21,7 @@ import {tts} from '@vdegenne/tts-server'
 
 tts({text: 'こんにちは'})
 ```
+
+## Notes
+
+- If you bump the versions, beware `@google-cloud/text-to-speech` internal `google-auth-libary` library has a mismatch with the one installed in this project. Try to make them match together.

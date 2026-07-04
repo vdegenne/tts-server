@@ -24,18 +24,6 @@
 		"wireit": "^0.14.13"
 	},
 	"wireit": {
-		"build": {
-			"command": "tsc --pretty",
-			"clean": "if-file-deleted",
-			"files": [
-				"./tsconfig.json",
-				"./src",
-				"./.env"
-			],
-			"output": [
-				"./lib"
-			]
-		},
 		"build:voice-ts": {
 			"command": "node ./scripts/build-voice-ts.js",
 			"files": [
@@ -45,6 +33,21 @@
 				"./src/voice.ts"
 			]
 		},
+		"build": {
+			"command": "tsc --pretty",
+			"clean": "if-file-deleted",
+			"dependencies": [
+				"build:voice-ts"
+			],
+			"files": [
+				"./tsconfig.json",
+				"./src",
+				"./.env"
+			],
+			"output": [
+				"./lib"
+			]
+		},
 		"start:server": {
 			"service": true,
 			"command": "node ./lib/server.js",
@@ -52,5 +55,10 @@
 				"build"
 			]
 		}
+	},
+	"dependencies": {
+		"@google-cloud/text-to-speech": "^6.4.1",
+		"asian-regexps": "^5.1.0",
+		"google-auth-library": "^10.5.0"
 	}
 }
