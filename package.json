@@ -1,6 +1,6 @@
 {
 	"name": "@vdegenne/tts-server",
-	"version": "0.1.6",
+	"version": "0.1.7",
 	"description": "",
 	"type": "module",
 	"exports": {
@@ -23,7 +23,7 @@
 	},
 	"devDependencies": {
 		"@vdegenne/koa": "^0.1.49",
-		"@vdegenne/mini-rest": "^0.3.4",
+		"@vdegenne/mini-rest": "^0.3.5",
 		"typescript": "^6.0.3",
 		"wireit": "^0.14.13"
 	},
