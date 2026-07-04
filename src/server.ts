@@ -47,10 +47,10 @@ config<TTSApi>({
 				)
 			}
 
-			// model ??= 'gemini-3.1-flash-tts-preview'
+			model ??= 'gemini-3.1-flash-tts-preview'
 			// model ??= 'gemini-2.5-pro-tts'
+			// model ??= 'Chirp3-HD'
 			// model ??= 'Chirp-HD'
-			model ??= 'Chirp3-HD'
 			// model ??= 'Wavenet'
 			voice ??= 'Alnilam'
 			audioEncoding ??= 'MP3' // default to mp3

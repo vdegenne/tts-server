@@ -40,12 +40,12 @@ export interface TTSArgs {
 	/**
 	 * @default 0
 	 */
-	pitch: number
+	pitch?: number
 
 	/**
 	 * @default 1
 	 */
-	rate: number
+	rate?: number
 }
 
 export interface TTSApi {
