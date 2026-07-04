@@ -21,7 +21,7 @@
 // 	name: string
 // }
 
-import {google} from '@google-cloud/text-to-speech/build/protos/protos.js'
+import {type google} from '@google-cloud/text-to-speech/build/protos/protos.js'
 
 /**
  * Better (pricier) to lower quality (cheaper):
