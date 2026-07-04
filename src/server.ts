@@ -59,6 +59,7 @@ config<TTSApi>({
 			if (!isGeminiModel(model)) {
 				prompt = undefined
 			}
+			// TODO: should normalize the prompt
 
 			/**
 			 * TODO: resolve "random" voice before hashing ?
