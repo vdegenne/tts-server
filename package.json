@@ -29,7 +29,8 @@
 			"clean": "if-file-deleted",
 			"files": [
 				"./tsconfig.json",
-				"./src"
+				"./src",
+				"./.env"
 			],
 			"output": [
 				"./lib"
