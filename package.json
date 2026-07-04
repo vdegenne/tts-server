@@ -36,6 +36,15 @@
 				"./lib"
 			]
 		},
+		"build:voice-ts": {
+			"command": "node ./scripts/build-voice-ts.js",
+			"files": [
+				"./scripts/build-voice-ts.js"
+			],
+			"output": [
+				"./src/voice.ts"
+			]
+		},
 		"start:server": {
 			"service": true,
 			"command": "node ./lib/server.js",
