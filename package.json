@@ -1,0 +1,46 @@
+{
+	"name": "@vdegenne/tts-server",
+	"version": "0.1.2",
+	"description": "",
+	"type": "module",
+	"exports": {
+		".": {
+			"import": "./lib/api.js",
+			"types": "./lib/api.d.ts"
+		}
+	},
+	"files": [
+		"./lib/api.js",
+		"./lib/api.d.ts"
+	],
+	"scripts": {
+		"build": "wireit",
+		"start:server": "wireit"
+	},
+	"devDependencies": {
+		"@vdegenne/koa": "^0.1.49",
+		"@vdegenne/mini-rest": "^0.3.4",
+		"typescript": "^6.0.3",
+		"wireit": "^0.14.13"
+	},
+	"wireit": {
+		"build": {
+			"command": "tsc --pretty",
+			"clean": "if-file-deleted",
+			"files": [
+				"./tsconfig.json",
+				"./src"
+			],
+			"output": [
+				"./lib"
+			]
+		},
+		"start:server": {
+			"service": true,
+			"command": "node ./lib/server.js",
+			"dependencies": [
+				"build"
+			]
+		}
+	}
+}
