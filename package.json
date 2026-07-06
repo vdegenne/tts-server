@@ -1,6 +1,6 @@
 {
 	"name": "@vdegenne/tts-server",
-	"version": "0.1.11",
+	"version": "0.1.12",
 	"description": "",
 	"type": "module",
 	"exports": {
@@ -15,7 +15,9 @@
 		"./lib/voice.js",
 		"./lib/voice.d.ts",
 		"./lib/types.js",
-		"./lib/types.d.ts"
+		"./lib/types.d.ts",
+		"./lib/AudioManager.js",
+		"./lib/AudioManager.d.ts"
 	],
 	"scripts": {
 		"build": "wireit",
