@@ -73,5 +73,6 @@ export function tts(args: TTSArgs) {
 	return audioManager.tts(args)
 }
 
+export {type AudioWrapper} from './AudioManager.js'
 export {TTS_MODELS} from './types.js'
-export {} from './voices.js'
+export * from './voice.js'
