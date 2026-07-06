@@ -8,6 +8,11 @@ export type AudioWrapper = {
 	element?: HTMLAudioElement
 }
 
+export type TTSOptions = {
+	autoplay?: boolean
+	pauseToggle?: boolean
+}
+
 function buildTTSHash(args: TTSArgs): string {
 	return JSON.stringify(args, Object.keys(args).sort())
 }
@@ -15,22 +20,26 @@ function buildTTSHash(args: TTSArgs): string {
 export class AudioManager {
 	private cache = new Map<string, AudioWrapper>()
 
-	tts(args: TTSArgs): AudioWrapper {
+	tts(args: TTSArgs, options: TTSOptions = {}): AudioWrapper {
 		const hash = buildTTSHash(args)
 
 		const existing = this.cache.get(hash)
 		if (existing) return existing
 
-		const wrapper = this.createWrapper(args)
+		const wrapper = this.createWrapper(args, options)
 		this.cache.set(hash, wrapper)
 		return wrapper
 	}
 
-	private createWrapper(args: TTSArgs): AudioWrapper {
+	private createWrapper(args: TTSArgs, options: TTSOptions): AudioWrapper {
+		const autoplay = options.autoplay ?? true
+		const pauseToggle = options.pauseToggle ?? false
+
 		let audio: HTMLAudioElement | undefined
 		let objectUrl: string | undefined
 
-		let stopped = false
+		let disposed = false
+		let shouldPlay = autoplay
 
 		let resolveEnd!: () => void
 		const end = new Promise<void>((resolve) => {
@@ -58,7 +67,9 @@ export class AudioManager {
 			element: undefined,
 
 			play: () => {
-				if (stopped) return
+				if (disposed) return
+
+				shouldPlay = true
 
 				if (audio) {
 					void audio.play()
@@ -67,21 +78,22 @@ export class AudioManager {
 
 				if (!inFlight) {
 					inFlight = load().then((a) => {
-						if (stopped) {
+						if (disposed || !shouldPlay) {
 							a.pause()
+							a.currentTime = 0
 							return
 						}
 
 						wrapper.element = a
 						audio = a
-
 						void a.play()
 					})
 				}
 			},
 
 			stop: () => {
-				stopped = true
+				disposed = true
+				shouldPlay = false
 
 				if (audio) {
 					audio.pause()
@@ -98,14 +110,23 @@ export class AudioManager {
 
 			toggle: () => {
 				if (!audio) {
-					wrapper.play()
+					shouldPlay = !shouldPlay
+					if (shouldPlay) wrapper.play()
 					return
 				}
 
 				if (audio.paused) {
+					shouldPlay = true
 					void audio.play()
 				} else {
-					audio.pause()
+					shouldPlay = false
+
+					if (pauseToggle) {
+						audio.pause()
+					} else {
+						audio.pause()
+						audio.currentTime = 0
+					}
 				}
 			},
 		}
@@ -116,10 +137,9 @@ export class AudioManager {
 	private async fetchOrGetBlob(args: TTSArgs): Promise<Blob> {
 		const hash = buildTTSHash(args)
 
-		// try to reuse wrapper-level fetch if already cached indirectly
 		const existing = this.cache.get(hash)
 		if (existing?.element) {
-			return await this.extractBlobFromAudio(existing.element)
+			throw new Error('Blob reuse not implemented in this path')
 		}
 
 		const res = await getApi().post('tts', args)
@@ -129,11 +149,6 @@ export class AudioManager {
 		}
 
 		return await res.blob()
-	}
-
-	private async extractBlobFromAudio(_audio: HTMLAudioElement): Promise<Blob> {
-		// placeholder: not used in this architecture path
-		throw new Error('Not implemented')
 	}
 
 	private cleanup(url?: string) {
