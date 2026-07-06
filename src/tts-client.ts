@@ -17,5 +17,3 @@ export const ttsClient = new TextToSpeechClient({
 	keyFilename: './service-account.json',
 	auth,
 })
-
-// ttsClient.synthesizeSpeech({audioConfig: {audioEncoding: 'LINEAR16'}})
