@@ -13,3 +13,4 @@ public/*512x512.png
 service-account.json
 .mdicon2svg
 src/voice.ts
+.env
