@@ -1,12 +1,7 @@
 import {getApi, type TTSArgs} from './api.ts'
 import {buildTTSHash} from './utils.ts'
 
-type CacheEntry = {
-	blob?: Blob
-	inFlight?: Promise<Blob>
-}
-
-type AudioWrapper = {
+export type AudioWrapper = {
 	end: Promise<void>
 	play: () => void
 	stop: () => void
@@ -14,57 +9,49 @@ type AudioWrapper = {
 	element?: HTMLAudioElement
 }
 
-type WrapperEntry = {
-	wrapper: AudioWrapper
-}
-
 export class AudioManager {
-	private cache = new Map<string, CacheEntry>()
-	private wrappers = new Map<string, WrapperEntry>()
+	private cache = new Map<string, AudioWrapper>()
 
-	tts(args: TTSArgs, forceNewWrapper = false): AudioWrapper {
-		const hashPromise = buildTTSHash(args)
+	async tts(args: TTSArgs): Promise<AudioWrapper> {
+		const hash = await buildTTSHash(args)
 
-		const wrapper: AudioWrapper = this.createWrapper(args, hashPromise)
+		const existing = this.cache.get(hash)
+		if (existing) return existing
 
-		if (!forceNewWrapper) {
-			// attach wrapper to registry once hash is known
-			void hashPromise.then((hash) => {
-				const existing = this.wrappers.get(hash)
-
-				if (existing) {
-					// reuse existing wrapper
-					return
-				}
-
-				this.wrappers.set(hash, {wrapper})
-			})
-
-			// optimistic return (first call wins)
-			return wrapper
-		}
-
+		const wrapper = this.createWrapper(args)
+		this.cache.set(hash, wrapper)
 		return wrapper
 	}
 
-	private createWrapper(
-		args: TTSArgs,
-		hashPromise: Promise<string>,
-	): AudioWrapper {
+	private createWrapper(args: TTSArgs): AudioWrapper {
 		let audio: HTMLAudioElement | undefined
 		let objectUrl: string | undefined
+
+		let stopped = false
 
 		let resolveEnd!: () => void
 		const end = new Promise<void>((resolve) => {
 			resolveEnd = resolve
 		})
 
-		let stopped = false
-		let loadingPromise: Promise<HTMLAudioElement> | null = null
+		let inFlight: Promise<void> | null = null
+
+		const load = async () => {
+			const blob = await this.fetchOrGetBlob(args)
+
+			objectUrl = URL.createObjectURL(blob)
+			audio = new Audio(objectUrl)
+
+			audio.onended = () => {
+				this.cleanup(objectUrl)
+				resolveEnd()
+			}
+
+			return audio
+		}
 
 		const wrapper: AudioWrapper = {
 			end,
-
 			element: undefined,
 
 			play: () => {
@@ -75,23 +62,17 @@ export class AudioManager {
 					return
 				}
 
-				if (!loadingPromise) {
-					loadingPromise = this.loadAudio(args).then((a) => {
+				if (!inFlight) {
+					inFlight = load().then((a) => {
 						if (stopped) {
 							a.pause()
-							return a
+							return
 						}
 
-						audio = a
 						wrapper.element = a
-
-						a.onended = () => {
-							this.cleanup(objectUrl)
-							resolveEnd()
-						}
+						audio = a
 
 						void a.play()
-						return a
 					})
 				}
 			},
@@ -129,56 +110,30 @@ export class AudioManager {
 		return wrapper
 	}
 
-	private async loadAudio(args: TTSArgs): Promise<HTMLAudioElement> {
+	private async fetchOrGetBlob(args: TTSArgs): Promise<Blob> {
 		const hash = await buildTTSHash(args)
 
-		const blob = await this.getOrFetchBlob(hash, args)
-
-		const url = URL.createObjectURL(blob)
-
-		const audio = new Audio(url)
-
-		return audio
-	}
-
-	private async getOrFetchBlob(hash: string, args: TTSArgs): Promise<Blob> {
-		let entry = this.cache.get(hash)
-
-		if (!entry) {
-			entry = {}
-			this.cache.set(hash, entry)
+		// try to reuse wrapper-level fetch if already cached indirectly
+		const existing = this.cache.get(hash)
+		if (existing?.element) {
+			return await this.extractBlobFromAudio(existing.element)
 		}
 
-		if (entry.blob) {
-			return entry.blob
-		}
+		const res = await getApi().post('tts', args)
 
-		if (entry.inFlight) {
-			return entry.inFlight
-		}
-
-		entry.inFlight = this.fetchTTS(args).then((blob) => {
-			entry!.blob = blob
-			entry!.inFlight = undefined
-			return blob
-		})
-
-		return entry.inFlight
-	}
-
-	private async fetchTTS(args: TTSArgs): Promise<Blob> {
-		const {ok, blob} = await getApi().post('tts', args)
-
-		if (!ok) {
+		if (!res.ok) {
 			throw new Error('TTS request failed')
 		}
 
-		return await blob()
+		return await res.blob()
+	}
+
+	private async extractBlobFromAudio(_audio: HTMLAudioElement): Promise<Blob> {
+		// placeholder: not used in this architecture path
+		throw new Error('Not implemented')
 	}
 
 	private cleanup(url?: string) {
-		if (url) {
-			URL.revokeObjectURL(url)
-		}
+		if (url) URL.revokeObjectURL(url)
 	}
 }
