@@ -35,7 +35,9 @@ config<TTSApi>({
 				audioEncoding,
 				pitch,
 				rate,
+				randomVoice,
 			} = guard({
+				allowAlien: true,
 				required: ['text'],
 			})
 
@@ -76,6 +78,11 @@ config<TTSApi>({
 			/**
 			 * NORMALIZATION
 			 **************************/
+			if (randomVoice) {
+				voice = VOICE_ALIASES[
+					Math.floor(Math.random() * VOICE_ALIASES.length)
+				] as Voice
+			}
 			if (model && !isGeminiModel(model) && !voiceIsModel(voice)) {
 				const composedVoice =
 					`${languageCode}-${model}-${voice}` as unknown as Voice
@@ -112,6 +119,9 @@ config<TTSApi>({
 			if (model && !isGeminiModel(model)) {
 				// NOTE: Assume all non-gemini models can't have a prompt.
 				prompt = undefined
+			}
+			if (prompt === 'default') {
+				prompt = 'Read aloud in a warm, welcoming tone.'
 			}
 
 			// TODO: should we add this feature back?
@@ -178,7 +188,6 @@ config<TTSApi>({
 			 * MAIN
 			 **************************/
 			try {
-				throw new Error('asdf')
 				// Do the file exist?
 				await access(cachedFilePath)
 

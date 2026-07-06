@@ -22,6 +22,13 @@ export interface TTSArgs {
 	 */
 	voice?: Voice
 	/**
+	 * This overrides `voice` argument
+	 *
+	 * @default false
+	 */
+	randomVoice?: boolean
+
+	/**
 	 * The model to be used
 	 * TODO: Default to determine
 	 */
