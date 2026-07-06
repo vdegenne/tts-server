@@ -1,5 +1,4 @@
 import {getApi, type TTSArgs} from './api.ts'
-import {buildTTSHash} from './utils.ts'
 
 export type AudioWrapper = {
 	end: Promise<void>
@@ -9,11 +8,15 @@ export type AudioWrapper = {
 	element?: HTMLAudioElement
 }
 
+function buildTTSHash(args: TTSArgs): string {
+	return JSON.stringify(args, Object.keys(args).sort())
+}
+
 export class AudioManager {
 	private cache = new Map<string, AudioWrapper>()
 
-	async tts(args: TTSArgs): Promise<AudioWrapper> {
-		const hash = await buildTTSHash(args)
+	tts(args: TTSArgs): AudioWrapper {
+		const hash = buildTTSHash(args)
 
 		const existing = this.cache.get(hash)
 		if (existing) return existing
@@ -111,7 +114,7 @@ export class AudioManager {
 	}
 
 	private async fetchOrGetBlob(args: TTSArgs): Promise<Blob> {
-		const hash = await buildTTSHash(args)
+		const hash = buildTTSHash(args)
 
 		// try to reuse wrapper-level fetch if already cached indirectly
 		const existing = this.cache.get(hash)
