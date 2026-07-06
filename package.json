@@ -1,12 +1,16 @@
 {
 	"name": "@vdegenne/tts-server",
-	"version": "0.1.18",
+	"version": "0.1.19",
 	"description": "",
 	"type": "module",
 	"exports": {
 		".": {
 			"import": "./lib/api.js",
 			"types": "./lib/api.d.ts"
+		},
+		"./voices.js": {
+			"import": "./lib/voice.js",
+			"types": "./lib/voice.d.ts"
 		}
 	},
 	"files": [
