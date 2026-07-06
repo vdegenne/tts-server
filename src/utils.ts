@@ -18,6 +18,6 @@ export function isGeminiModel(model: TTSModel) {
 	return model.includes('gemini')
 }
 
-export function voiceIncludesModel(voice: Voice) {
+export function voiceIsModel(voice: Voice) {
 	return voice.includes('-')
 }

@@ -1,11 +1,13 @@
+import {google} from '@google-cloud/text-to-speech/build/protos/protos.js'
 import {config} from '@vdegenne/koa'
 import {hasSomeJapanese} from 'asian-regexps'
-import fs from 'fs'
+import fs, {ReadStream} from 'node:fs'
+import {access, writeFile} from 'node:fs/promises'
 import * as pathlib from 'path'
 import {type TTSApi} from './api.js'
 import {ttsClient} from './tts-client.ts'
-import {audioEncodingToExtension} from './types.ts'
-import {buildTTSHash, isGeminiModel, voiceIncludesModel} from './utils.js'
+import {audioEncodingToExtension, audioEncodingToMimeType} from './types.ts'
+import {buildTTSHash, isGeminiModel, voiceIsModel} from './utils.js'
 import {type Voice, VOICE_ALIASES, type VoiceAlias, VOICES} from './voice.ts'
 
 const cacheLocation = './cache'
@@ -21,17 +23,19 @@ config<TTSApi>({
 
 	post: {
 		async tts({guard, ctx}) {
+			/**
+			 * GUARD/CHECKS
+			 **************************/
 			let {
 				text,
 				languageCode,
-				model,
 				voice,
+				model,
 				prompt,
 				audioEncoding,
 				pitch,
 				rate,
 			} = guard({
-				allowAlien: true,
 				required: ['text'],
 			})
 
@@ -41,31 +45,86 @@ config<TTSApi>({
 				}
 			}
 			if (!languageCode) {
-				return ctx.throw(
+				ctx.throw(
 					400,
-					'A language code was not provided and could not be inferred.',
+					'A language code could not be inferred, set it explicitely.',
 				)
 			}
 
-			model ??= 'gemini-3.1-flash-tts-preview'
-			// model ??= 'gemini-2.5-pro-tts'
-			// model ??= 'Chirp3-HD'
-			// model ??= 'Chirp-HD'
-			// model ??= 'Wavenet'
-			voice ??= 'Alnilam'
+			if (voice) {
+				if (!VOICES.includes(voice)) {
+					ctx.throw(400, 'This voice is unavailable.')
+				}
+			} else {
+				voice ??= 'Achernar' // default
+			}
+
+			/**
+			 * DEFAULTS
+			 **************************/
+			if (!voiceIsModel(voice) && !model) {
+				model ??= 'gemini-3.1-flash-tts-preview'
+				// model ??= 'gemini-2.5-pro-tts'
+				// model ??= 'Chirp3-HD'
+				// model ??= 'Chirp-HD'
+				// model ??= 'Wavenet'
+			}
 			audioEncoding ??= 'MP3' // default to mp3
 			pitch ??= 0
 			rate ??= 1
-			if (!isGeminiModel(model)) {
-				prompt = undefined
-			}
-			// TODO: should normalize the prompt
 
 			/**
-			 * TODO: resolve "random" voice before hashing ?
-			 */
-			// ?
+			 * NORMALIZATION
+			 **************************/
+			if (model && !isGeminiModel(model) && !voiceIsModel(voice)) {
+				const composedVoice =
+					`${languageCode}-${model}-${voice}` as unknown as Voice
 
+				if (!VOICES.includes(composedVoice)) {
+					ctx.throw(`The inferred voice is not available (${composedVoice})`)
+				}
+
+				voice = composedVoice
+				// model = undefined
+			}
+			if (model && !isGeminiModel(model) && voiceIsModel(voice)) {
+				model = undefined
+			}
+			if (model && isGeminiModel(model) && voiceIsModel(voice)) {
+				ctx.throw("Shouldn't happen")
+			}
+
+			if (
+				voiceIsModel(voice) &&
+				model &&
+				!voice.startsWith(`${languageCode}-${model}-`)
+			) {
+				ctx.throw(
+					400,
+					"Ambiguity found. Voice contains a model information and it doesn't match the value of model explicitely given.",
+				)
+
+				// If the model is included into the voice name we unset the model.
+				model = undefined
+			}
+
+			// TODO: should normalize the prompt (e.g. all lowercase?)?
+			if (model && !isGeminiModel(model)) {
+				// NOTE: Assume all non-gemini models can't have a prompt.
+				prompt = undefined
+			}
+
+			// TODO: should we add this feature back?
+			// if (voice === 'random') {
+			// 	voice = VOICE_ALIASES[
+			// 		Math.floor(Math.random() * VOICE_ALIASES.length)
+			// 	] as VoiceAlias
+			// 	console.log(`Picking random voice: ${voice}`)
+			// }
+
+			/**
+			 * VARS
+			 **************************/
 			const hash = await buildTTSHash({
 				text,
 				languageCode,
@@ -76,32 +135,66 @@ config<TTSApi>({
 				pitch,
 				rate,
 			})
-
-			if (voice === 'random') {
-				voice = VOICE_ALIASES[
-					Math.floor(Math.random() * VOICE_ALIASES.length)
-				] as VoiceAlias
-				console.log(`picking random voice: ${voice}`)
-			}
-
-			if (!isGeminiModel(model) && !voiceIncludesModel(voice)) {
-				const composedVoice = `${languageCode}-${model}-${voice}`
-				// console.log('composed: ', composedVoice)
-				if (!VOICES.includes(composedVoice as Voice)) {
-					ctx.throw(`The inferred voice is not available (${composedVoice})`)
-				} else {
-					voice = composedVoice as Voice
-				}
-				model = undefined
-			}
-
 			const extension = audioEncodingToExtension[audioEncoding]
 			if (!extension) {
 				ctx.throw("Extension couldn't be determined")
 			}
+			const mimeType = audioEncodingToMimeType[audioEncoding]
+			if (!mimeType) {
+				ctx.throw("MimeType couldn't be determined")
+			}
 
-			// prettier-ignore
-			console.log({text, languageCode, model, voice, prompt, audioEncoding, pitch, rate, extension})
+			function sendAudio(
+				audioContent:
+					| ReadStream
+					| google.cloud.texttospeech.v1.ISynthesizeSpeechResponse['audioContent'],
+			) {
+				ctx.type = mimeType
+				ctx.body = audioContent
+
+				if (audioContent instanceof ReadStream) {
+					audioContent.on('error', (err) => {
+						ctx.app.emit('error', err, ctx)
+					})
+				}
+			}
+
+			const cachedFilePath = pathlib.join(cacheLocation, `${hash}.${extension}`)
+
+			// // prettier-ignore
+			console.log({
+				text,
+				languageCode,
+				model,
+				voice,
+				prompt,
+				audioEncoding,
+				pitch,
+				rate,
+				extension,
+			})
+
+			/**
+			 * MAIN
+			 **************************/
+			try {
+				throw new Error('asdf')
+				// Do the file exist?
+				await access(cachedFilePath)
+
+				// Yes: send to the client
+				console.log('FILE EXISTS, we send it.')
+				sendAudio(fs.createReadStream(cachedFilePath))
+				return
+			} catch (err) {
+				const code = (err as NodeJS.ErrnoException)?.code
+
+				if (code !== 'ENOENT') {
+					throw err
+				}
+			}
+			// No: file doesn't exist, continue
+			console.log("FILE DOESN'T EXIST, we fetch it")
 
 			const [response] = await ttsClient.synthesizeSpeech({
 				audioConfig: {
@@ -118,9 +211,7 @@ config<TTSApi>({
 			})
 
 			// send to client immediately
-			// TODO: this should adapt
-			ctx.type = 'audio/mpeg'
-			ctx.body = response.audioContent
+			sendAudio(response.audioContent)
 
 			// async cache write (non-blocking)
 			void (async function save() {
@@ -129,7 +220,7 @@ config<TTSApi>({
 						throw new Error('No audioContent returned from TTS API')
 					}
 
-					await fs.promises.writeFile(
+					await writeFile(
 						pathlib.join(cacheLocation, `${hash}.${extension}`),
 						response.audioContent,
 					)

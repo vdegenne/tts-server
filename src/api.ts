@@ -17,15 +17,15 @@ export interface TTSArgs {
 	 */
 	languageCode?: LanguageCode
 	/**
+	 * The voice to be used.
+	 * TODO: Default to determine
+	 */
+	voice?: Voice
+	/**
 	 * The model to be used
 	 * TODO: Default to determine
 	 */
 	model?: TTSModel
-	/**
-	 * The voice to be used.
-	 * TODO: Default to determine
-	 */
-	voice?: Voice | 'random'
 
 	/**
 	 * Prompt to be used with the model (only with Gemini models)

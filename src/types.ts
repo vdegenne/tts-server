@@ -109,3 +109,14 @@ export const audioEncodingToExtension: Record<AudioEncoding, string> = {
 	PCM: 'wav',
 	M4A: 'm4a',
 }
+
+export const audioEncodingToMimeType: Record<AudioEncoding, string> = {
+	AUDIO_ENCODING_UNSPECIFIED: 'application/octet-stream',
+	LINEAR16: 'audio/wav',
+	MP3: 'audio/mpeg',
+	OGG_OPUS: 'audio/ogg',
+	MULAW: 'audio/wav',
+	ALAW: 'audio/wav',
+	PCM: 'audio/wav',
+	M4A: 'audio/mp4',
+}
