@@ -9,8 +9,14 @@ export type AudioWrapper = {
 }
 
 export type TTSOptions = {
-	autoplay?: boolean
-	pauseToggle?: boolean
+	/**
+	 * @default true
+	 */
+	autoplay: boolean
+	/**
+	 * @default false
+	 */
+	pauseToggle: boolean
 }
 
 function buildTTSHash(args: TTSArgs): string {
@@ -20,13 +26,18 @@ function buildTTSHash(args: TTSArgs): string {
 export class AudioManager {
 	private cache = new Map<string, AudioWrapper>()
 
-	tts(args: TTSArgs, options: TTSOptions = {}): AudioWrapper {
+	tts(args: TTSArgs, options?: Partial<TTSOptions>): AudioWrapper {
+		const _options: TTSOptions = {
+			autoplay: true,
+			pauseToggle: false,
+			...options,
+		}
 		const hash = buildTTSHash(args)
 
 		const existing = this.cache.get(hash)
 		if (existing) return existing
 
-		const wrapper = this.createWrapper(args, options)
+		const wrapper = this.createWrapper(args, _options)
 		this.cache.set(hash, wrapper)
 		return wrapper
 	}

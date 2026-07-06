@@ -69,7 +69,7 @@ export function getApi(endpoint = 'http://localhost:37435/'): Rest<TTSApi> {
 }
 
 let audioManager = new AudioManager()
-export function tts(args: TTSArgs, options?: TTSOptions) {
+export function tts(args: TTSArgs, options?: Partial<TTSOptions>) {
 	return audioManager.tts(args, options)
 }
 
