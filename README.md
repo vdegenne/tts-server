@@ -1,6 +1,6 @@
 ## Back
 
-Create a service account on Google Cloud first and download a config file (save it at the root of this project), rename it to `service-account.json`.
+Create a service account on Google Cloud first and download a config file (save it at the root of this project), rename it to `service-account.json`.  
 **(!) If you fork this in the public domain, do not remove `service-account.json` from `.gitignore` !**
 
 Then,
