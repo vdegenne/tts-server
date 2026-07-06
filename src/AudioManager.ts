@@ -141,6 +141,10 @@ export class AudioManager {
 			},
 		}
 
+		if (shouldPlay) {
+			wrapper.play()
+		}
+
 		return wrapper
 	}
 
