@@ -63,7 +63,7 @@ export function getApi(endpoint = 'http://localhost:37435/'): Rest<TTSApi> {
 
 let audioManager = new AudioManager()
 export function tts(args: TTSArgs) {
-	audioManager.tts(args)
+	return audioManager.tts(args)
 }
 
 export {TTS_MODELS} from './types.js'
