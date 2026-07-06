@@ -10,13 +10,47 @@ type AudioWrapper = {
 	end: Promise<void>
 	play: () => void
 	stop: () => void
+	toggle: () => void
 	element?: HTMLAudioElement
+}
+
+type WrapperEntry = {
+	wrapper: AudioWrapper
 }
 
 export class AudioManager {
 	private cache = new Map<string, CacheEntry>()
+	private wrappers = new Map<string, WrapperEntry>()
 
-	tts(args: TTSArgs): AudioWrapper {
+	tts(args: TTSArgs, forceNewWrapper = false): AudioWrapper {
+		const hashPromise = buildTTSHash(args)
+
+		const wrapper: AudioWrapper = this.createWrapper(args, hashPromise)
+
+		if (!forceNewWrapper) {
+			// attach wrapper to registry once hash is known
+			void hashPromise.then((hash) => {
+				const existing = this.wrappers.get(hash)
+
+				if (existing) {
+					// reuse existing wrapper
+					return
+				}
+
+				this.wrappers.set(hash, {wrapper})
+			})
+
+			// optimistic return (first call wins)
+			return wrapper
+		}
+
+		return wrapper
+	}
+
+	private createWrapper(
+		args: TTSArgs,
+		hashPromise: Promise<string>,
+	): AudioWrapper {
 		let audio: HTMLAudioElement | undefined
 		let objectUrl: string | undefined
 
@@ -76,6 +110,19 @@ export class AudioManager {
 				}
 
 				resolveEnd()
+			},
+
+			toggle: () => {
+				if (!audio) {
+					wrapper.play()
+					return
+				}
+
+				if (audio.paused) {
+					void audio.play()
+				} else {
+					audio.pause()
+				}
 			},
 		}
 
