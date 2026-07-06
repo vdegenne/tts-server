@@ -67,3 +67,4 @@ export function tts(args: TTSArgs) {
 }
 
 export {TTS_MODELS} from './types.js'
+export {} from './voices.js'
