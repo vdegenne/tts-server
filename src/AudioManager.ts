@@ -43,8 +43,7 @@ export class AudioManager {
 	}
 
 	private createWrapper(args: TTSArgs, options: TTSOptions): AudioWrapper {
-		const autoplay = options.autoplay ?? true
-		const pauseToggle = options.pauseToggle ?? false
+		const {autoplay, pauseToggle} = options
 
 		let audio: HTMLAudioElement | undefined
 		let objectUrl: string | undefined
