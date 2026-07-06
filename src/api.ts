@@ -1,5 +1,5 @@
 import {Rest, type Endpoint} from '@vdegenne/mini-rest'
-import {AudioManager} from './AudioManager.ts'
+import {AudioManager, TTSOptions} from './AudioManager.ts'
 import {AudioEncoding, TTSModel} from './types.js'
 import {LanguageCode, Voice} from './voice.ts'
 
@@ -69,8 +69,8 @@ export function getApi(endpoint = 'http://localhost:37435/'): Rest<TTSApi> {
 }
 
 let audioManager = new AudioManager()
-export function tts(args: TTSArgs) {
-	return audioManager.tts(args)
+export function tts(args: TTSArgs, options?: TTSOptions) {
+	return audioManager.tts(args, options)
 }
 
 export {type AudioWrapper} from './AudioManager.js'
