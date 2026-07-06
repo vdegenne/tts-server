@@ -14,6 +14,6 @@ const auth = new GoogleAuth({
 })
 export const ttsClient = new TextToSpeechClient({
 	// apiKey: process.env.GOOGLE_TTS_API_KEY,
-	keyFilename: './service-account.json',
+	// keyFilename: './service-account.json',
 	auth,
 })
