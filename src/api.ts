@@ -1,5 +1,5 @@
-import {type google} from '@google-cloud/text-to-speech/build/protos/protos.js'
 import {Rest, type Endpoint} from '@vdegenne/mini-rest'
+import {AudioManager} from './AudioManager.ts'
 import {AudioEncoding, TTSModel} from './types.js'
 import {LanguageCode, Voice} from './voice.ts'
 
@@ -50,19 +50,20 @@ export interface TTSArgs {
 
 export interface TTSApi {
 	get: {ping: Endpoint<void, 'pong'>}
-	post: {tts: Endpoint<TTSArgs, void>}
+	post: {tts: Endpoint<TTSArgs, Blob>}
 }
 
 let api: Rest<TTSApi> | undefined
-export function getApi(): Rest<TTSApi> {
+export function getApi(endpoint = 'http://localhost:37435/'): Rest<TTSApi> {
 	if (!api) {
-		api = new Rest<TTSApi>('http://localhost:37435/')
+		api = new Rest<TTSApi>(endpoint)
 	}
 	return api
 }
 
+let audioManager = new AudioManager()
 export function tts(args: TTSArgs) {
-	return getApi().post('tts', args)
+	audioManager.tts(args)
 }
 
 export {TTS_MODELS} from './types.js'

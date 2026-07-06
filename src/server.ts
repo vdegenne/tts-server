@@ -66,7 +66,7 @@ config<TTSApi>({
 			 */
 			// ?
 
-			const hash = buildTTSHash({
+			const hash = await buildTTSHash({
 				text,
 				languageCode,
 				model,
@@ -109,7 +109,7 @@ config<TTSApi>({
 					pitch,
 					speakingRate: rate,
 				},
-				input: {text},
+				input: {text, prompt},
 				voice: {
 					languageCode,
 					name: voice,
@@ -118,6 +118,7 @@ config<TTSApi>({
 			})
 
 			// send to client immediately
+			// TODO: this should adapt
 			ctx.type = 'audio/mpeg'
 			ctx.body = response.audioContent
 
