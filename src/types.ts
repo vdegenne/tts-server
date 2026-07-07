@@ -1,50 +1,69 @@
 import {type google} from '@google-cloud/text-to-speech/build/protos/protos.js'
 
 /**
- * Better (pricier) to lower quality (cheaper), maybe :
+ * Gemini models has no free quota !
+ * They are way more expensive than recent and old models.
+ * Also you will have to activate the "Agent Plateform" API on Google Cloud to use them.
  *
- *	- Instant Custom Voice (voix personnalisée)
- * 	- Studio
- * 	- Gemini 3.1 Flash TTS (preview)
- * 	- Gemini 2.5 Pro TTS
- * 	- Gemini 2.5 Flash TTS
- * 	- Chirp HD (Chirp 3 HD)
- * 	- Neural2
- * 	- WaveNet
- * 	- Standard
+ * The Non-Gemini models are sort from priciest to cheapest in the structure.
+ * Though they have different FREE quota, so you might want to study the list before choosing one.
  *
+ * Basically it goes like this (from cheapest to priciest):
+ *	- Standard/WaveNet
+ *	- Neural2/Polyglot
+ *	- Chirp3-HD
+ *	- Studio
  */
 export const TTS_MODELS = {
 	/**
 	 * Gemini 3.1 Flash TTS
 	 *
-	 * Input : ~1.00 USD / 1M text tokens
-	 * Output: ~20.00 USD / 1M audio tokens
+	 * NO FREE quota
+	 * Input : 1.00 USD / 1M text tokens
+	 * Output: 20.00 USD / 1M audio tokens(*)
+	 *
+	 * (*) Audio tokens correspond to 25 tokens per second of audio
 	 */
 	GEMINI_3_1_FLASH_TTS: 'gemini-3.1-flash-tts-preview',
-
-	/**
-	 * Gemini 2.5 Flash TTS
-	 *
-	 * Input : 0.50 USD / 1M text tokens
-	 * Output: 10.00 USD / 1M audio tokens
-	 */
-	GEMINI_2_5_FLASH_TTS: 'gemini-2.5-flash-tts',
-	/**
-	 * Gemini 2.5 Flash Lite TTS
-	 *
-	 * Input : 0.50 USD / 1M text tokens
-	 * Output: 10.00 USD / 1M audio tokens
-	 */
-	GEMINI_2_5_FLASH_LITE_TTS: 'gemini-2.5-flash-lite-preview-tts',
 
 	/**
 	 * Gemini 2.5 Pro TTS
 	 *
 	 * Input : 1.00 USD / 1M text tokens
-	 * Output: 20.00 USD / 1M audio tokens
+	 * Output: 20.00 USD / 1M audio tokens(*)
+	 *
+	 * (*) Audio tokens correspond to 25 tokens per second of audio
 	 */
 	GEMINI_2_5_PRO_TTS: 'gemini-2.5-pro-tts',
+
+	/**
+	 * Gemini 2.5 Flash TTS
+	 *
+	 * NO FREE quota
+	 * Input : 0.50 USD / 1M text tokens
+	 * Output: 10.00 USD / 1M audio tokens(*)
+	 *
+	 * (*) Audio tokens correspond to 25 tokens per second of audio
+	 */
+	GEMINI_2_5_FLASH_TTS: 'gemini-2.5-flash-tts',
+	/**
+	 * Gemini 2.5 Flash Lite TTS
+	 *
+	 * NO FREE quota
+	 * Input : 0.50 USD / 1M text tokens
+	 * Output: 10.00 USD / 1M audio tokens(*)
+	 *
+	 * (*) Audio tokens correspond to 25 tokens per second of audio
+	 */
+	GEMINI_2_5_FLASH_LITE_TTS: 'gemini-2.5-flash-lite-preview-tts',
+
+	/**
+	 * Studio voices
+	 *
+	 * 0–1M chars/month : FREE
+	 * >1M chars/month  : 160.00 USD / 1M chars
+	 */
+	STUDIO: 'Studio',
 
 	/**
 	 * Chirp 3 HD
@@ -63,10 +82,30 @@ export const TTS_MODELS = {
 	CHIRP_HD: 'Chirp-HD',
 
 	/**
+	 * Neural2
+	 *
+	 * 0–1M chars/month : FREE
+	 * >1M chars/month  : 16.00 USD / 1M chars
+	 *
+	 */
+	NEURAL_2: 'Neural2',
+	/**
+	 * Polyglot
+	 *
+	 * 0–1M chars/month : FREE
+	 * >1M chars/month  : 16.00 USD / 1M chars
+	 */
+	POLYGLOT: 'Polyglot',
+
+	/**
 	 * WaveNet
 	 *
 	 * 0–4M chars/month : FREE
 	 * >4M chars/month  : 4.00 USD / 1M chars
+	 *
+	 * 👍
+	 * Note: Historically better than "Standard"
+	 * but its price became the same.
 	 */
 	WAVENET: 'Wavenet',
 
@@ -75,23 +114,9 @@ export const TTS_MODELS = {
 	 *
 	 * 0–4M chars/month : FREE
 	 * >4M chars/month  : 4.00 USD / 1M chars
+	 *
 	 */
 	STANDARD: 'Standard',
-
-	/**
-	 * Studio voices
-	 *
-	 * 0–1M chars/month : FREE
-	 * >1M chars/month  : 160.00 USD / 1M chars
-	 */
-	STUDIO: 'Studio',
-
-	/**
-	 * Polyglot
-	 *
-	 * Pricing not published separately.
-	 */
-	POLYGLOT: 'Polyglot',
 } as const
 
 export type TTSModel = (typeof TTS_MODELS)[keyof typeof TTS_MODELS]
