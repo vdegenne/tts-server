@@ -21,7 +21,7 @@ npm i -D @vdegenne/tts-server
 
 ### Usage
 
-```
+```ts
 import {tts} from '@vdegenne/tts-server'
 
 const audioWrap = tts({text: 'こんにちは'})
