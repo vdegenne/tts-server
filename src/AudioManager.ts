@@ -1,7 +1,6 @@
 import {getApi, type TTSArgs} from './api.ts'
 
 export type AudioWrapper = {
-	end: Promise<void>
 	error: Promise<Error>
 	play: () => Promise<void>
 	stop: () => void
@@ -65,30 +64,28 @@ export class AudioManager {
 		let disposed = false
 		let shouldPlay = autoplay
 
-		let resolveEnd!: () => void
-		const end = new Promise<void>((resolve) => {
-			resolveEnd = resolve
-		})
-
 		let rejectError!: (error: Error) => void
+
 		const error = new Promise<Error>((resolve) => {
 			rejectError = resolve
 		})
 
-		let finished = false
-
-		function finish() {
-			if (finished) return
-
-			finished = true
-			resolveEnd()
-		}
+		let loading: Promise<HTMLAudioElement> | undefined
 
 		function fail(err: unknown) {
 			const error = err instanceof Error ? err : new Error(String(err))
 
 			rejectError(error)
-			finish()
+		}
+
+		function waitForEnd(element: HTMLAudioElement): Promise<void> {
+			return new Promise((resolve, reject) => {
+				element.onended = () => resolve()
+
+				element.onerror = () => {
+					reject(new Error('Audio playback failed'))
+				}
+			})
 		}
 
 		const load = async () => {
@@ -98,12 +95,6 @@ export class AudioManager {
 				objectUrl = URL.createObjectURL(blob)
 
 				const element = new Audio(objectUrl)
-
-				element.onended = () => {
-					this.cleanup(objectUrl)
-					objectUrl = undefined
-					finish()
-				}
 
 				element.onerror = () => {
 					fail(new Error('Audio playback failed'))
@@ -118,21 +109,13 @@ export class AudioManager {
 			}
 		}
 
-		let loading: Promise<HTMLAudioElement> | undefined
-
 		function loadPromise() {
 			return (loading ??= load())
 		}
 
-		if (options.prefetch) {
-			void loadPromise().catch(() => {
-				// Error is exposed through wrapper.error
-			})
-		}
-
 		const wrapper: AudioWrapper = {
-			end,
 			error,
+
 			element: undefined,
 
 			play: async () => {
@@ -152,6 +135,10 @@ export class AudioManager {
 					wrapper.element = element
 
 					await element.play()
+					await waitForEnd(element)
+
+					this.cleanup(objectUrl)
+					objectUrl = undefined
 				} catch (err) {
 					fail(err)
 					throw err
@@ -171,8 +158,6 @@ export class AudioManager {
 					this.cleanup(objectUrl)
 					objectUrl = undefined
 				}
-
-				finish()
 			},
 
 			toggle: async () => {
@@ -191,6 +176,7 @@ export class AudioManager {
 
 					try {
 						await audio.play()
+						await waitForEnd(audio)
 					} catch (err) {
 						fail(err)
 						throw err
@@ -207,9 +193,15 @@ export class AudioManager {
 			},
 		}
 
+		if (options.prefetch) {
+			void loadPromise().catch(() => {
+				// Exposed through wrapper.error
+			})
+		}
+
 		if (shouldPlay) {
 			void wrapper.play().catch(() => {
-				// Error is exposed through wrapper.error
+				// Exposed through wrapper.error
 			})
 		}
 
