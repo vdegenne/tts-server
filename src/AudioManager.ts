@@ -12,7 +12,7 @@ export type TTSOptions = {
 	/**
 	 * @default true
 	 */
-	autoplay: boolean
+	// autoplay: boolean
 
 	/**
 	 * @default false
@@ -37,7 +37,7 @@ export class AudioManager {
 
 	tts(args: TTSArgs, options?: Partial<TTSOptions>): AudioWrapper {
 		const _options: TTSOptions = {
-			autoplay: true,
+			// autoplay: true,
 			pauseToggle: false,
 			prefetch: true,
 			...options,
@@ -56,13 +56,13 @@ export class AudioManager {
 	}
 
 	private createWrapper(args: TTSArgs, options: TTSOptions): AudioWrapper {
-		const {autoplay, pauseToggle} = options
+		const {pauseToggle} = options
 
 		let audio: HTMLAudioElement | undefined
 		let objectUrl: string | undefined
 
 		let disposed = false
-		let shouldPlay = autoplay
+		let shouldPlay = false
 
 		let rejectError!: (error: Error) => void
 
@@ -199,11 +199,11 @@ export class AudioManager {
 			})
 		}
 
-		if (shouldPlay) {
-			void wrapper.play().catch(() => {
-				// Exposed through wrapper.error
-			})
-		}
+		// if (shouldPlay) {
+		// 	void wrapper.play().catch(() => {
+		// 		// Exposed through wrapper.error
+		// 	})
+		// }
 
 		return wrapper
 	}
