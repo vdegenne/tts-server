@@ -1,4 +1,4 @@
-import {google} from '@google-cloud/text-to-speech/build/protos/protos.js'
+import {type google} from '@google-cloud/text-to-speech/build/protos/protos.js'
 import {config} from '@vdegenne/koa'
 import {hasSomeJapanese} from 'asian-regexps'
 import fs, {ReadStream} from 'node:fs'
