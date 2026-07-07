@@ -6,9 +6,13 @@ import {access, writeFile} from 'node:fs/promises'
 import * as pathlib from 'path'
 import {type TTSApi} from './api.js'
 import {ttsClient} from './tts-client.ts'
-import {audioEncodingToExtension, audioEncodingToMimeType} from './types.ts'
+import {
+	audioEncodingToExtension,
+	audioEncodingToMimeType,
+	TTS_MODELS,
+} from './types.ts'
 import {buildTTSHash, isGeminiModel, voiceIsModel} from './utils.js'
-import {type Voice, VOICE_ALIASES, type VoiceAlias, VOICES} from './voice.ts'
+import {type Voice, VOICE_ALIASES, VOICES} from './voice.ts'
 
 const cacheLocation = './cache'
 
@@ -65,11 +69,12 @@ config<TTSApi>({
 			 * DEFAULTS
 			 **************************/
 			if (!voiceIsModel(voice) && !model) {
-				model ??= 'gemini-3.1-flash-tts-preview'
-				// model ??= 'gemini-2.5-pro-tts'
-				// model ??= 'Chirp3-HD'
-				// model ??= 'Chirp-HD'
-				// model ??= 'Wavenet'
+				// model ??= TTS_MODELS.GEMINI_3_1_FLASH_TTS
+				// model ??= TTS_MODELS.GEMINI_2_5_FLASH_LITE_TTS
+				// model ??= TTS_MODELS.GEMINI_2_5_PRO_TTS
+				// model ??= TTS_MODELS.CHIRP_3_HD
+				// model ??= TTS_MODELS.CHIRP_HD
+				model ??= TTS_MODELS.WAVENET
 			}
 			audioEncoding ??= 'MP3' // default to mp3
 			pitch ??= 0
