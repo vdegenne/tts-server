@@ -24,15 +24,14 @@ npm i -D @vdegenne/tts-server
 ```
 import {tts} from '@vdegenne/tts-server'
 
-const audioWrapper = tts({text: 'こんにちは'}) // it autoplays by default (as soon as the file is available)
+const audioWrap = tts({text: 'こんにちは'})
 
-audioWrapper.end.then(() => {
-  console.log('tts finished playing.')
-})
-
-audioWrapper.error.catch((err) => {
+audioWrap.error.catch((err) => {
+	// e.g. fails if the server is down
 	console.error('TTS failed:', err)
 })
+
+await audioWrap.play()
 ```
 
 ## Notes
