@@ -5,14 +5,14 @@ import fs, {ReadStream} from 'node:fs'
 import {access, writeFile} from 'node:fs/promises'
 import * as pathlib from 'path'
 import {type TTSApi} from './api.js'
-import {ttsClient} from './tts-client.ts'
+import {ttsClient} from './tts-client.js'
 import {
 	audioEncodingToExtension,
 	audioEncodingToMimeType,
 	TTS_MODELS,
-} from './types.ts'
+} from './types.js'
 import {buildTTSHash, isGeminiModel, voiceIsModel} from './utils.js'
-import {type Voice, VOICE_ALIASES, VOICES} from './voice.ts'
+import {type Voice, VOICE_ALIASES, VOICES} from './voice.js'
 
 const cacheLocation = './cache'
 
