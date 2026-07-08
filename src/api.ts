@@ -20,11 +20,12 @@ export interface TTSArgs {
 	 * The voice to be used.
 	 * TODO: Default to determine
 	 */
-	voice?: Voice
+	voice?: Voice | 'random'
 	/**
 	 * This overrides `voice` argument
 	 *
 	 * @default false
+	 * @deprecated Use "random" value for `voice` parameter instead.
 	 */
 	randomVoice?: boolean
 

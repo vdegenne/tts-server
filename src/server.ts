@@ -12,7 +12,7 @@ import {
 	TTS_MODELS,
 } from './types.js'
 import {buildTTSHash, isGeminiModel, voiceIsModel} from './utils.js'
-import {type Voice, VOICE_ALIASES, VOICES} from './voice.js'
+import {type Voice, VOICE_ALIASES, VoiceAlias, VOICES} from './voice.js'
 
 const cacheLocation = './cache'
 
@@ -56,18 +56,20 @@ config<TTSApi>({
 					'A language code could not be inferred, set it explicitely.',
 				)
 			}
-
-			if (voice) {
-				if (!VOICES.includes(voice)) {
-					ctx.throw(400, 'This voice is unavailable.')
-				}
-			} else {
-				voice ??= 'Achernar' // default
+			if (voice && voice !== 'random' && !VOICES.includes(voice)) {
+				ctx.throw(400, 'This voice is unavailable.')
 			}
 
 			/**
 			 * DEFAULTS
 			 **************************/
+			voice ??= 'Achernar' // default
+			if (voice === 'random') {
+				voice = VOICE_ALIASES[
+					Math.floor(Math.random() * VOICE_ALIASES.length)
+				] as VoiceAlias
+				console.log(`Picking random voice: ${voice}`)
+			}
 			if (!voiceIsModel(voice) && !model) {
 				// model ??= TTS_MODELS.GEMINI_3_1_FLASH_TTS
 				// model ??= TTS_MODELS.GEMINI_2_5_FLASH_LITE_TTS
@@ -128,14 +130,6 @@ config<TTSApi>({
 			if (prompt === 'default') {
 				prompt = 'Read aloud in a warm, welcoming tone.'
 			}
-
-			// TODO: should we add this feature back?
-			// if (voice === 'random') {
-			// 	voice = VOICE_ALIASES[
-			// 		Math.floor(Math.random() * VOICE_ALIASES.length)
-			// 	] as VoiceAlias
-			// 	console.log(`Picking random voice: ${voice}`)
-			// }
 
 			/**
 			 * VARS
