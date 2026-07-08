@@ -72,8 +72,8 @@ export class AudioManager {
 
 		let rejectError!: (error: Error) => void
 
-		const error = new Promise<Error>((resolve) => {
-			rejectError = resolve
+		const error = new Promise<Error>((_resolve, reject) => {
+			rejectError = reject
 		})
 
 		let loading: Promise<HTMLAudioElement> | undefined
