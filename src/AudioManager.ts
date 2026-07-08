@@ -6,6 +6,10 @@ export type AudioWrapper = {
 	stop: () => void
 	toggle: () => Promise<void>
 	element?: HTMLAudioElement
+	/**
+	 * The hash associated with the request's params
+	 */
+	hash: string | undefined
 }
 
 export type TTSOptions = {
@@ -28,14 +32,46 @@ export type TTSOptions = {
 	prefetch: boolean
 }
 
-function buildTTSHash(args: TTSArgs): string {
-	return JSON.stringify(args, Object.keys(args).sort())
+// function buildTTSHash(args: TTSArgs): string {
+// 	return JSON.stringify(args, Object.keys(args).sort())
+// }
+async function getHash(input: string | object): Promise<string> {
+	function sortObject(value: unknown): unknown {
+		if (Array.isArray(value)) {
+			return value.map(sortObject)
+		}
+
+		if (value !== null && typeof value === 'object') {
+			return Object.fromEntries(
+				Object.entries(value)
+					.sort(([a], [b]) => a.localeCompare(b))
+					.map(([key, val]) => [key, sortObject(val)]),
+			)
+		}
+
+		return value
+	}
+
+	const normalized =
+		typeof input === 'string' ? input : JSON.stringify(sortObject(input))
+
+	// console.log('normalized: ', normalized)
+
+	const data = new TextEncoder().encode(normalized)
+	const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+
+	return Array.from(new Uint8Array(hashBuffer))
+		.map((byte) => byte.toString(16).padStart(2, '0'))
+		.join('')
 }
 
 export class AudioManager {
 	private cache = new Map<string, AudioWrapper>()
 
-	tts(args: TTSArgs, options?: Partial<TTSOptions>): AudioWrapper {
+	async tts(
+		args: TTSArgs,
+		options?: Partial<TTSOptions>,
+	): Promise<AudioWrapper> {
 		const _options: TTSOptions = {
 			// autoplay: true,
 			pauseToggle: false,
@@ -43,12 +79,14 @@ export class AudioManager {
 			...options,
 		}
 
-		const hash = buildTTSHash(args)
+		// const hash = buildTTSHash(args)
+		const hash = await getHash(args)
 
 		const existing = this.cache.get(hash)
 		if (existing) return existing
 
 		const wrapper = this.createWrapper(args, _options)
+		wrapper.hash = hash
 
 		this.cache.set(hash, wrapper)
 
@@ -191,6 +229,8 @@ export class AudioManager {
 					}
 				}
 			},
+
+			hash: undefined,
 		}
 
 		if (options.prefetch) {
