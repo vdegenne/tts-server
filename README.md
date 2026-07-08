@@ -24,7 +24,9 @@ npm i -D @vdegenne/tts-server
 ```ts
 import {tts} from '@vdegenne/tts-server'
 
-const audioWrap = tts({text: 'こんにちは'})
+const audioWrap = await tts({text: 'こんにちは'})
+// the `await` here is just for the hash function
+// it does not wait for the request to finish.
 
 audioWrap.error.catch((err) => {
 	// e.g. fails if the server is down
